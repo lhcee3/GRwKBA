@@ -1,0 +1,8 @@
+neo4j-data/
+ollama/
+docs/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+*.log
