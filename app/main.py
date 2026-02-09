@@ -130,6 +130,38 @@ def graph_stats():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/graph/visualize")
+def get_graph_data():
+    """Get graph data for visualization"""
+    try:
+        with pipeline.driver.session() as session:
+            # Get all nodes
+            nodes_result = session.run("""
+                MATCH (n:Entity)
+                RETURN id(n) as id, n.name as name
+            """)
+            nodes = [{"id": str(record["id"]), "label": record["name"]} for record in nodes_result]
+            
+            # Get all relationships
+            edges_result = session.run("""
+                MATCH (s:Entity)-[r:RELATION]->(t:Entity)
+                RETURN id(s) as source, id(t) as target, r.type as type, r.source as doc
+            """)
+            edges = [
+                {
+                    "source": str(record["source"]),
+                    "target": str(record["target"]),
+                    "type": record["type"],
+                    "label": record["type"],
+                    "document": record["doc"]
+                }
+                for record in edges_result
+            ]
+            
+        return {"nodes": nodes, "edges": edges}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.delete("/graph/clear")
 def clear_graph():
     """Clear all data from the graph database"""

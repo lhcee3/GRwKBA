@@ -81,10 +81,74 @@ streamlit run streamlit_app.py --server.port 8501
 ### Access Points
 
 - **Streamlit UI**: http://localhost:8501
+  - Chat interface for Q&A
+  - Interactive graph visualization
+  - Document upload and management
 - **API Documentation**: http://localhost:8000/docs
 - **Neo4j Browser**: http://localhost:7474
   - Username: neo4j
   - Password: password123
+  - Advanced Cypher query interface
+
+## Graph Visualization
+
+The application provides multiple ways to visualize and explore your knowledge graph:
+
+### 1. Built-in Interactive Visualization (Streamlit)
+The Streamlit interface includes a dedicated "Graph Visualization" tab that displays:
+- **Interactive node-edge graph**: Drag, zoom, and explore entities and relationships
+- **Real-time statistics**: Track entities, relationships, and connected documents
+- **Relationship details**: View all connections with source document information
+- **Auto-refresh**: Update visualization as you add new documents
+
+**Features:**
+- Color-coded entities
+- Labeled relationships showing connection types
+- Physics-enabled layout for optimal viewing
+- Click nodes to highlight connections
+
+### 2. Neo4j Browser (Advanced)
+Access Neo4j Browser at http://localhost:7474 for:
+- Writing custom Cypher queries
+- Advanced graph analytics
+- Database management
+- Export capabilities
+
+**Useful Cypher Queries:**
+```cypher
+// View all nodes and relationships
+MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 50
+
+// Find relationships from a specific document
+MATCH (s)-[r:RELATION]->(t) 
+WHERE r.source = 'your_document.pdf' 
+RETURN s, r, t
+
+// Find entity connections
+MATCH (n:Entity {name: 'EntityName'})-[r]-(connected)
+RETURN n, r, connected
+
+// Get graph statistics
+MATCH (n:Entity) RETURN count(n) as entities
+MATCH ()-[r:RELATION]->() RETURN count(r) as relationships
+```
+
+### How the Graph is Built
+
+When you upload a document:
+1. Text is extracted from PDF/DOCX/TXT files
+2. LLM analyzes content to extract entities and relationships
+3. Entities become nodes in the graph
+4. Relationships become edges connecting the nodes
+5. Each relationship is tagged with the source document
+
+**Example:**
+If your document states "Python is a programming language used by Google", the system creates:
+- Node: `Python`
+- Node: `programming language`
+- Node: `Google`
+- Edge: `Python` → `is a` → `programming language`
+- Edge: `Python` → `used by` → `Google`
 
 ## Technology Stack
 
