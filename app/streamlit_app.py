@@ -134,7 +134,7 @@ with st.sidebar:
         st.metric("Graph Nodes", stats["nodes"])
         st.metric("Relationships", stats["relationships"])
     except:
-        st.info("Backend not connected")
+        pass
 
 st.header("💬 Ask Questions")
 
