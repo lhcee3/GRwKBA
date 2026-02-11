@@ -1,53 +1,241 @@
-# GraphRAG with AI Agents
+# GraphRAG Multi-Tenant Knowledge Base
 
-Enterprise-grade knowledge graph and database query system powered by LangChain, LangGraph, and AI agents. Features intelligent query routing across Neo4j graph database, SQL database, and document analysis with conversation memory.
+A multi-tenant RAG (Retrieval Augmented Generation) system with user authentication, project-based knowledge bases, and knowledge graph visualization.
 
 ## Features
 
-### Multi-Agent Architecture
-- **Graph Agent**: Queries Neo4j knowledge graph from uploaded documents
-- **SQL Agent**: Text-to-SQL natural language queries on relational database
-- **Research Agent**: Document analysis and topic extraction
-- **Smart Routing**: Automatic agent selection based on query intent
+- Multi-Tenant Architecture - Each user can create multiple isolated projects
+- JWT Authentication - Secure user registration and login
+- Project-Based Knowledge Bases - Separate knowledge graphs per project
+- PDF/Document Processing - Upload and process PDF, DOCX, TXT files
+- Interactive Chat - Ask questions about your documents using AI
+- Knowledge Graph Visualization - Visual representation of entities and relationships
+- Flexible LLM Support - Use Groq API (cloud) or Ollama (local)
 
-### Knowledge Management
-- Document upload and processing (PDF, DOCX)
-- Entity and relationship extraction
-- Neo4j graph database storage
-- SQLite relational database with sample data
+## Prerequisites
 
-### Conversation Memory
-- Session-based conversation history
-- Context-aware responses
-- Automatic summarization for long conversations
+- Python 3.11+
+- Node.js 18+
+- Neo4j database
+- Groq API key (get from https://console.groq.com)
 
-### Developer Features
-- REST API with FastAPI
-- Interactive Streamlit web interface
-- Comprehensive API documentation
-- Docker containerization
+## Setup Instructions
 
-## Quick Start
+### 1. Start Neo4j
 
-### Prerequisites
-
-- Python 3.8 or higher
-- Docker and Docker Compose
-- Groq API key (get free at groq.com)
-
-### Installation
-
-1. Clone the repository and navigate to the project directory
-
-2. Copy environment configuration:
+**Option A: Using Docker (Easiest)**
 ```bash
-cp .env.example .env
+docker run -d --name graphrag-neo4j \
+  -p 7474:7474 -p 7687:7687 \
+  -e NEO4J_AUTH=neo4j/password123 \
+  neo4j:5.15
 ```
 
-3. Edit `.env` and add your Groq API key:
+**Option B: Install Neo4j Desktop**
+- Download from https://neo4j.com/download/
+- Create a database with password `password123`
+- Start the database
+
+### 2. Configure Environment
+
+Create `.env` file in project root:
 ```env
-GROQ_API_KEY=your_api_key_here
+# Neo4j Configuration
+NEO4J_URI=bolt://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=password123
+
+# LLM Provider
+LLM_PROVIDER=groq
+GROQ_API_KEY=your-groq-api-key-here
+GROQ_MODEL=llama-3.3-70b-versatile
+
+# JWT Secret (generate with: openssl rand -hex 32)
+JWT_SECRET_KEY=your-secret-key-here
 ```
+
+### 3. Start Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+python main.py
+```
+
+Backend will run on http://localhost:8000
+
+### 4. Start Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend will run on http://localhost:5173
+
+### 5. Use the Application
+
+1. Open http://localhost:5173 in your browser
+2. Register a new account
+3. Create a project
+4. Upload documents (PDF, DOCX, or TXT)
+5. Wait for processing to complete
+6. Ask questions in the chat interface
+
+## Project Structure
+
+```
+gr-rag/
+├── backend/          # FastAPI backend
+│   ├── main.py       # API endpoints
+│   ├── auth.py       # JWT authentication
+│   ├── database.py   # SQLite operations
+│   ├── rag_pipeline.py  # Document processing & RAG
+│   └── requirements.txt
+├── frontend/         # React frontend
+│   └── src/
+│       ├── components/  # UI components
+│       └── api.js       # API client
+└── docker-compose.yml   # Optional Docker setup
+```
+
+## API Documentation
+
+Once backend is running, visit:
+- API Docs: http://localhost:8000/docs
+- Health Check: http://localhost:8000/api
+
+## Troubleshooting
+
+**Backend won't start**
+- Check if port 8000 is available: `netstat -ano | findstr :8000`
+- Verify Neo4j is running: `netstat -ano | findstr :7687`
+
+**Neo4j connection failed**
+- Ensure Neo4j is running on port 7687
+- Verify password matches NEO4J_PASSWORD in .env
+
+**Documents stuck in "Processing"**
+- Check backend terminal for error messages
+- Verify GROQ_API_KEY is valid
+- Ensure Neo4j connection is working
+
+**Frontend can't connect to backend**
+- Verify backend is running on port 8000
+- Check that API_URL in frontend/src/api.js is correct
+
+## Technology Stack
+
+**Backend**
+- FastAPI - Web framework
+- SQLite - User/project data
+- Neo4j - Knowledge graph storage
+- LangChain - RAG pipeline
+- Groq/Ollama - LLM inference
+
+**Frontend**
+- React - UI framework
+- Vite - Build tool
+- Tailwind CSS - Styling
+- Axios - HTTP client
+
+### Queries
+- `POST /api/query` - Ask a question
+
+## 🗂️ Project Structure
+
+```
+gr-rag/
+├── backend/
+│   ├── main.py           # FastAPI application
+│   ├── models.py         # Pydantic models
+│   ├── database.py       # SQLite operations
+│   ├── auth.py           # JWT authentication
+│   ├── rag_pipeline.py   # Multi-tenant RAG logic
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── ProjectView.jsx
+│   │   │   └── GraphVisualization.jsx
+│   │   ├── App.jsx
+│   │   ├── AuthContext.jsx
+│   │   └── api.js
+│   └── package.json
+├── docker-compose.yml
+├── .env
+└── README.md
+```
+
+## 🔧 Troubleshooting
+
+### Ollama Connection Issues
+```bash
+# Check Ollama is running
+docker exec -it graphrag-ollama ollama list
+
+# Pull a model
+docker exec -it graphrag-ollama ollama pull llama3.2
+
+# Check logs
+docker logs graphrag-ollama
+```
+
+### Backend Errors
+```bash
+# Check backend logs
+docker logs graphrag-backend
+
+# Restart backend
+docker-compose restart backend
+```
+
+### Neo4j Connection Issues
+```bash
+# Check Neo4j is running
+docker logs graphrag-neo4j
+
+# Access Neo4j browser
+open http://localhost:7474
+```
+
+## 🚀 Production Deployment
+
+1. **Generate strong JWT secret**:
+```bash
+openssl rand -hex 32
+```
+
+2. **Update environment variables**:
+```env
+JWT_SECRET_KEY=<generated-secret>
+```
+
+3. **Configure CORS** in `backend/main.py`:
+```python
+allow_origins=["https://yourdomain.com"]
+```
+
+4. **Use production builds**:
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+## 📝 License
+
+MIT License - feel free to use this project for learning or commercial purposes.
+
+## 🤝 Contributing
+
+Contributions welcome! Please feel free to submit a Pull Request.
+
+## 📧 Support
+
+For issues or questions, please open an issue on GitHub.
 
 4. Install Python dependencies:
 ```bash
@@ -81,10 +269,74 @@ streamlit run streamlit_app.py --server.port 8501
 ### Access Points
 
 - **Streamlit UI**: http://localhost:8501
+  - Chat interface for Q&A
+  - Interactive graph visualization
+  - Document upload and management
 - **API Documentation**: http://localhost:8000/docs
 - **Neo4j Browser**: http://localhost:7474
   - Username: neo4j
   - Password: password123
+  - Advanced Cypher query interface
+
+## Graph Visualization
+
+The application provides multiple ways to visualize and explore your knowledge graph:
+
+### 1. Built-in Interactive Visualization (Streamlit)
+The Streamlit interface includes a dedicated "Graph Visualization" tab that displays:
+- **Interactive node-edge graph**: Drag, zoom, and explore entities and relationships
+- **Real-time statistics**: Track entities, relationships, and connected documents
+- **Relationship details**: View all connections with source document information
+- **Auto-refresh**: Update visualization as you add new documents
+
+**Features:**
+- Color-coded entities
+- Labeled relationships showing connection types
+- Physics-enabled layout for optimal viewing
+- Click nodes to highlight connections
+
+### 2. Neo4j Browser (Advanced)
+Access Neo4j Browser at http://localhost:7474 for:
+- Writing custom Cypher queries
+- Advanced graph analytics
+- Database management
+- Export capabilities
+
+**Useful Cypher Queries:**
+```cypher
+// View all nodes and relationships
+MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 50
+
+// Find relationships from a specific document
+MATCH (s)-[r:RELATION]->(t) 
+WHERE r.source = 'your_document.pdf' 
+RETURN s, r, t
+
+// Find entity connections
+MATCH (n:Entity {name: 'EntityName'})-[r]-(connected)
+RETURN n, r, connected
+
+// Get graph statistics
+MATCH (n:Entity) RETURN count(n) as entities
+MATCH ()-[r:RELATION]->() RETURN count(r) as relationships
+```
+
+### How the Graph is Built
+
+When you upload a document:
+1. Text is extracted from PDF/DOCX/TXT files
+2. LLM analyzes content to extract entities and relationships
+3. Entities become nodes in the graph
+4. Relationships become edges connecting the nodes
+5. Each relationship is tagged with the source document
+
+**Example:**
+If your document states "Python is a programming language used by Google", the system creates:
+- Node: `Python`
+- Node: `programming language`
+- Node: `Google`
+- Edge: `Python` → `is a` → `programming language`
+- Edge: `Python` → `used by` → `Google`
 
 ## Technology Stack
 
